@@ -1,4 +1,4 @@
-use std::env::var;
+use std::{env::var, thread, time::Duration};
 
 use async_process::{Child, Command};
 use clap::Parser;
@@ -66,7 +66,9 @@ fn exec(client: &mut Client, mark: String, command: String, arguments: String, w
                     let value: Value = from_str(&String::from_utf8_lossy(&payload)).unwrap();
                     if value["container"]["pid"] == child_pid {
                         let id: u32 = value["container"]["id"].as_u64().unwrap() as u32;
-                        client.run(command::raw(format!("mark {mark}, move scratchpad, focus, {window_center}")).with_criteria(vec![con_id(id)])).unwrap();
+                        client.run(command::raw(format!("mark {mark}, move scratchpad, focus")).with_criteria(vec![con_id(id)])).unwrap();
+                        thread::sleep(Duration::from_millis(50));
+                        client.run(command::raw(format!("{window_center}")).with_criteria(vec![con_id(id)])).unwrap();
                         return;
                     }
                 },

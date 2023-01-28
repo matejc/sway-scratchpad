@@ -30,5 +30,5 @@ Options:
 Put this in you sway config (`~/.config/sway/config`)
 
 ```
-bindsym F12 exec sway-scratchpad --command xterm --mark terminal
+bindsym F12 exec sway-scratchpad --command kitty --mark terminal
 ```
