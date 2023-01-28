@@ -1,0 +1,20 @@
+[package]
+name = "sway-scratchpad"
+version = "0.1.0"
+description = "Convert a command to a scratchpad"
+homepage = "https://github.com/matejc/sway-scratchpad"
+repository = "https://github.com/matejc/sway-scratchpad"
+readme = "README.md"
+authors = ["Matej Cotman <matej@matejc.com>"]
+license = "BSD-2-Clause"
+edition = "2021"
+include = [
+  "src/*.rs",
+  "Cargo.toml",
+]
+
+[dependencies]
+async-process = "1.6.0"
+clap = { version = "4.1.4", features = ["derive"] }
+ksway = "0.1.0"
+serde_json = "1.0.91"
