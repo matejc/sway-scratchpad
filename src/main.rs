@@ -21,8 +21,8 @@ struct Args {
    command: String,
 
    /// Execute command with this arguments
-   #[arg(short, long, default_value_t = String::new())]
-   arguments: String,
+   #[arg(short, long, default_value = None, use_value_delimiter = true, value_delimiter = ' ')]
+   arguments: Vec<String>,
 
    /// Width of scratchpad in percent
    #[arg(long, default_value_t = 95)]
@@ -44,12 +44,12 @@ fn is_running(child: &mut Child) -> bool {
     }
 }
 
-fn exec(client: &mut Client, mark: String, command: String, arguments: String, width_percent: u64, height_percent: u64) {
+fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<String>, width_percent: u64, height_percent: u64) {
     let mut child: Child;
     if arguments.len() == 0 {
         child = Command::new(command).spawn().unwrap();
     } else {
-        child = Command::new(command).arg(arguments).spawn().unwrap();
+        child = Command::new(command).args(arguments).spawn().unwrap();
     }
     let child_pid = child.id().to_owned();
 
