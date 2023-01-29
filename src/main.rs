@@ -79,11 +79,6 @@ fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<Strin
     }
 }
 
-fn show(client: &mut Client, mark: String, width_percent: u64, height_percent: u64) {
-    let window_center = window_center(client, width_percent, height_percent);
-    client.run(command::raw(format!("focus, {window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
-}
-
 fn switch(client: &mut Client, mark: String, width_percent: u64, height_percent: u64) {
     let window_center = window_center(client, width_percent, height_percent);
     client.run(command::raw(format!("move scratchpad, focus, {window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
@@ -142,8 +137,7 @@ fn main() {
     match marked {
         Err(_) => exec(&mut client, mark, args.command, args.arguments, args.width, args.height),
         Ok(c) if c["focused"].as_bool().unwrap() => hide(&mut client, mark),
-        Ok(c) if !c["focused"].as_bool().unwrap() && !c["visible"].as_bool().unwrap() => show(&mut client, mark, args.width, args.height),
-        Ok(c) if !c["focused"].as_bool().unwrap() && c["visible"].as_bool().unwrap() => switch(&mut client, mark, args.width, args.height),
+        Ok(c) if !c["focused"].as_bool().unwrap() => switch(&mut client, mark, args.width, args.height),
         _ => {}
     }
 }
