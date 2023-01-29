@@ -84,6 +84,11 @@ fn show(client: &mut Client, mark: String, width_percent: u64, height_percent: u
     client.run(command::raw(format!("focus, {window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
 }
 
+fn switch(client: &mut Client, mark: String, width_percent: u64, height_percent: u64) {
+    let window_center = window_center(client, width_percent, height_percent);
+    client.run(command::raw(format!("move scratchpad, focus, {window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
+}
+
 fn hide(client: &mut Client, mark: String) {
     client.run(command::raw("move scratchpad").with_criteria(vec![con_mark(mark)])).unwrap();
 }
@@ -134,11 +139,11 @@ fn main() {
     let tree_data: Value = from_str(&String::from_utf8_lossy(&client.ipc(ipc_command::get_tree()).unwrap())).unwrap();
     let containers = find_edges(&tree_data);
     let marked = get_mark_container(&containers, mark.to_owned());
-
     match marked {
         Err(_) => exec(&mut client, mark, args.command, args.arguments, args.width, args.height),
         Ok(c) if c["focused"].as_bool().unwrap() => hide(&mut client, mark),
-        Ok(c) if !c["focused"].as_bool().unwrap() => show(&mut client, mark, args.width, args.height),
+        Ok(c) if !c["focused"].as_bool().unwrap() && !c["visible"].as_bool().unwrap() => show(&mut client, mark, args.width, args.height),
+        Ok(c) if !c["focused"].as_bool().unwrap() && c["visible"].as_bool().unwrap() => switch(&mut client, mark, args.width, args.height),
         _ => {}
     }
 }

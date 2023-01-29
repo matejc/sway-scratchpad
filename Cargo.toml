@@ -1,6 +1,6 @@
 [package]
 name = "sway-scratchpad"
-version = "0.1.0"
+version = "0.1.1"
 description = "Convert a command to a scratchpad"
 homepage = "https://github.com/matejc/sway-scratchpad"
 repository = "https://github.com/matejc/sway-scratchpad"
