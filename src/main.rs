@@ -81,7 +81,9 @@ fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<Strin
 
 fn switch(client: &mut Client, mark: String, width_percent: u64, height_percent: u64) {
     let window_center = window_center(client, width_percent, height_percent);
-    client.run(command::raw(format!("move scratchpad, focus, {window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
+    client.run(command::raw(format!("move scratchpad, focus")).with_criteria(vec![con_mark(mark.to_owned())])).unwrap();
+    thread::sleep(Duration::from_millis(50));
+    client.run(command::raw(format!("{window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
 }
 
 fn hide(client: &mut Client, mark: String) {
