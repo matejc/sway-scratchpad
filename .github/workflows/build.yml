@@ -5,10 +5,12 @@ on:
     tags:
     - 'v*'
 
+
 jobs:
-  build:
+  release:
     name: Release
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
       - uses: actions/checkout@master
       - name: Compile
@@ -19,18 +21,15 @@ jobs:
           UPLOAD_MODE: none
       - name: Get tag
         id: tag
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-      - name: Get name
-        id: name
-        run: echo ::set-output name=NAME::$(echo $GITHUB_REF | awk -F / '{print $3}')
-      - name: Create Draft Release
+        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+      - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.tag.outputs.VERSION }}
-          release_name: "${{ steps.name.outputs.NAME }} ${{ steps.tag.outputs.VERSION }}"
+          tag_name: ${{ env.TAG }}
+          release_name: "${{ github.event.repository.name }} ${{ env.TAG }}"
           draft: false
           prerelease: false
       - uses: actions/upload-release-asset@v1.0.1
@@ -39,5 +38,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ${{ steps.compile.outputs.BUILT_ARCHIVE }}
-          asset_name: "${{ steps.name.outputs.NAME }}-${{ steps.tag.outputs.VERSION }}.zip"
+          asset_name: "${{ github.event.repository.name }}-${{ env.TAG }}.zip"
           asset_content_type: application/zip
