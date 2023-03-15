@@ -16,13 +16,9 @@ struct Args {
    #[arg(short, long, default_value_t = var("SWAYSOCK").unwrap())]
    sock: String,
 
-   /// Execute command
-   #[arg(short, long)]
-   command: String,
-
-   /// Execute command with this arguments
+   /// Execute command with arguments
    #[arg(short, long, default_value = None, use_value_delimiter = true, value_delimiter = ' ')]
-   arguments: Vec<String>,
+   command: Vec<String>,
 
    /// Width of scratchpad in percent
    #[arg(long, default_value_t = 95)]
@@ -132,12 +128,16 @@ fn main() {
     let args: Args = Args::parse();
     let mark = format!("{}{}", MARK_PREFIX, args.mark);
 
+    let argv: &mut Vec<String> = &mut args.command.to_owned();
+    let command: String = argv[0].to_owned();
+    let arguments: Vec<String> = argv[1..].to_vec();
+
     let mut client = Client::connect_to_path(args.sock.to_owned()).unwrap();
     let tree_data: Value = from_str(&String::from_utf8_lossy(&client.ipc(ipc_command::get_tree()).unwrap())).unwrap();
     let containers = find_edges(&tree_data);
     let marked = get_mark_container(&containers, mark.to_owned());
     match marked {
-        Err(_) => exec(&mut client, mark, args.command, args.arguments, args.width, args.height),
+        Err(_) => exec(&mut client, mark, command, arguments, args.width, args.height),
         Ok(c) if c["focused"].as_bool().unwrap() => hide(&mut client, mark),
         Ok(c) if !c["focused"].as_bool().unwrap() => switch(&mut client, mark, args.width, args.height),
         _ => {}
