@@ -1,5 +1,3 @@
-use std::{fs::OpenOptions, fs::File, path::Path, io::Write};
-
 use ksway::{Client, ipc_command};
 use serde_json::{from_str, Value};
 use crate::Args;
@@ -33,18 +31,6 @@ impl WindowSize {
 
         let w = self.get_size(WIDTH, client, &mut focused_output);
         let h = self.get_size(HEIGHT, client, &mut focused_output);
-
-        let path = Path::new("/home/andrei/.local/lib/test.log");
-
-        let string = format!("w: {}, h: {} \n", w, h);
-
-        let mut file = if !path.exists() {
-            File::create(path).unwrap()
-        } else {
-            File::options().write(true).append(true).open(path).unwrap()
-        };
-    
-        file.write_all(string.as_bytes()).unwrap();
 
         (w, h)
     }
