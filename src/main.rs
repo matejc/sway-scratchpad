@@ -1,3 +1,5 @@
+mod window_size;
+
 use std::{env::var, thread, time::Duration};
 
 use async_process::{Child, Command};
@@ -11,7 +13,7 @@ const MARK_PREFIX: &str = "SCRATCHPAD_";
 /// Execute commands and set mark on their Sway container for further use
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
-struct Args {
+pub struct Args {
    /// Sway/i3 socket path
    #[arg(short, long, default_value_t = var("SWAYSOCK").unwrap())]
    sock: String,
@@ -27,6 +29,14 @@ struct Args {
    /// Height of scratchpad in percent
    #[arg(long, default_value_t = 90)]
    height: u64,
+
+   /// Width of scratchpad in pixels
+   #[arg(long, default_value_t = 0)]
+   width_px: u64,
+
+   /// Height of scratchpad in pixels
+   #[arg(long, default_value_t = 0)]
+   height_px: u64,
 
    /// Mark the container (executed command) with with this value
    #[arg(short, long)]
