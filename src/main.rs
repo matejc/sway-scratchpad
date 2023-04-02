@@ -6,6 +6,7 @@ use async_process::{Child, Command};
 use clap::Parser;
 use ksway::{Client, IpcEvent, command, criteria::{con_id, con_mark}, ipc_command};
 use serde_json::{from_str, Value};
+use window_size::WindowSize;
 
 const MARK_PREFIX: &str = "SCRATCHPAD_";
 
@@ -50,7 +51,7 @@ fn is_running(child: &mut Child) -> bool {
     }
 }
 
-fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<String>, width_percent: u64, height_percent: u64) {
+fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<String>, window_size: WindowSize) {
     let mut child: Child;
     if arguments.len() == 0 {
         child = Command::new(command).spawn().unwrap();
@@ -59,7 +60,7 @@ fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<Strin
     }
     let child_pid = child.id().to_owned();
 
-    let window_center = window_center(client, width_percent, height_percent);
+    let window_center = window_center(client, window_size);
 
     let rx = client.subscribe(vec![IpcEvent::Window, IpcEvent::Tick]).unwrap();
     loop {
@@ -85,8 +86,8 @@ fn exec(client: &mut Client, mark: String, command: String, arguments: Vec<Strin
     }
 }
 
-fn switch(client: &mut Client, mark: String, width_percent: u64, height_percent: u64) {
-    let window_center = window_center(client, width_percent, height_percent);
+fn switch(client: &mut Client, mark: String, window_size: WindowSize) {
+    let window_center = window_center(client, window_size);
     client.run(command::raw(format!("move scratchpad, focus")).with_criteria(vec![con_mark(mark.to_owned())])).unwrap();
     thread::sleep(Duration::from_millis(50));
     client.run(command::raw(format!("{window_center}")).with_criteria(vec![con_mark(mark)])).unwrap();
@@ -121,15 +122,9 @@ fn find_edges(tree_data: &Value) -> Vec<Value> {
     }
 }
 
-fn window_center(client: &mut Client, width_percent: u64, height_percent: u64) -> String {
-    let outputs: Vec<Value> = from_str(&String::from_utf8_lossy(&client.ipc(ipc_command::get_outputs()).unwrap())).unwrap();
-    let focused_output: Value = outputs.into_iter().filter(|o| o["focused"].as_bool().unwrap()).nth(0).unwrap();
+fn window_center(client: &mut Client, window_size: WindowSize) -> String {
 
-    let width = focused_output["rect"]["width"].as_u64().unwrap();
-    let height = focused_output["rect"]["height"].as_u64().unwrap();
-
-    let w = width * width_percent / 100;
-    let h = height * height_percent / 100;
+    let (w, h) = window_size.get_sizes(client);
 
     return String::from(format!("resize set {w} px {h} px, move position center"));
 }
@@ -146,10 +141,11 @@ fn main() {
     let tree_data: Value = from_str(&String::from_utf8_lossy(&client.ipc(ipc_command::get_tree()).unwrap())).unwrap();
     let containers = find_edges(&tree_data);
     let marked = get_mark_container(&containers, mark.to_owned());
+    let window_size = WindowSize::new(args);
     match marked {
-        Err(_) => exec(&mut client, mark, command, arguments, args.width, args.height),
+        Err(_) => exec(&mut client, mark, command, arguments, window_size),
         Ok(c) if c["focused"].as_bool().unwrap() => hide(&mut client, mark),
-        Ok(c) if !c["focused"].as_bool().unwrap() => switch(&mut client, mark, args.width, args.height),
+        Ok(c) if !c["focused"].as_bool().unwrap() => switch(&mut client, mark, window_size),
         _ => {}
     }
 }

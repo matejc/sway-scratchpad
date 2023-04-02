@@ -1,16 +1,19 @@
+use std::{fs::OpenOptions, fs::File, path::Path, io::Write};
+
 use ksway::{Client, ipc_command};
 use serde_json::{from_str, Value};
 use crate::Args;
 
-const WIDTH: &'static str = "width";
-const HEIGHT: &'static str = "height";
+const WIDTH: &str = "width";
+const HEIGHT: &str = "height";
 
+#[derive(Debug, PartialEq)]
 pub struct WindowSize {
     width: Size,
     height: Size,
 }
 
-impl<'a> WindowSize {
+impl WindowSize {
     pub fn new(args: Args) -> Self {
         let width = match args.width_px {
             0 => Size::Percent(args.width),
@@ -25,16 +28,29 @@ impl<'a> WindowSize {
         Self { width, height }
     }
 
-    pub fn get_sizes (&mut self, client: &mut Client) -> (u64, u64) {
+    pub fn get_sizes (&self, client: &mut Client) -> (u64, u64) {
         let mut focused_output: Option<Value> = None;
 
         let w = self.get_size(WIDTH, client, &mut focused_output);
         let h = self.get_size(HEIGHT, client, &mut focused_output);
+
+        let path = Path::new("/home/andrei/.local/lib/test.log");
+
+        let string = format!("w: {}, h: {} \n", w, h);
+
+        let mut file = if !path.exists() {
+            File::create(path).unwrap()
+        } else {
+            File::options().write(true).append(true).open(path).unwrap()
+        };
+    
+        file.write_all(string.as_bytes()).unwrap();
+
         (w, h)
     }
 
     fn get_size(
-        &mut self, measurement: &str,
+        &self, measurement: &str,
         client: &mut Client,
         focused_output: &mut Option<Value>,
     ) -> u64 {
@@ -72,22 +88,10 @@ impl<'a> WindowSize {
 
 
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Size {
     Percent(u64),
     Pixel(u64),
 }
 
 
-fn window_center(client: &mut Client, width_percent: u64, height_percent: u64) -> String {
-    let outputs: Vec<Value> = from_str(&String::from_utf8_lossy(&client.ipc(ipc_command::get_outputs()).unwrap())).unwrap();
-    let focused_output: Value = outputs.into_iter().filter(|o| o["focused"].as_bool().unwrap()).nth(0).unwrap();
-
-    let width = focused_output["rect"]["width"].as_u64().unwrap();
-    let height = focused_output["rect"]["height"].as_u64().unwrap();
-
-    let w = width * width_percent / 100;
-    let h = height * height_percent / 100;
-
-    return String::from(format!("resize set {w} px {h} px, move position center"));
-}
