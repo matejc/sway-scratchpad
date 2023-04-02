@@ -121,7 +121,7 @@ fn window_center(client: &mut Client, width_percent: u64, height_percent: u64) -
     let w = width * width_percent / 100;
     let h = height * height_percent / 100;
 
-    return String::from(format!("resize set {w} px {h} px, move position {} px {} px", (width - w) / 2, (height - h) / 2));
+    return String::from(format!("resize set {w} px {h} px, move position center"));
 }
 
 fn main() {
